@@ -17,73 +17,191 @@
       padding: 20px;
     }
     h1 { margin-bottom: 20px; font-size: 1.5rem; }
-    #kamera-btn {
+
+    .buton-grup {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .buton-grup button {
       background: #e94560;
       color: white;
       border: none;
-      padding: 14px 30px;
+      padding: 12px 22px;
       border-radius: 30px;
-      font-size: 1rem;
+      font-size: 0.95rem;
       cursor: pointer;
-      margin-bottom: 20px;
     }
+    .buton-grup button.ikincil {
+      background: #16213e;
+      border: 2px solid #e94560;
+    }
+
     #canvas {
       max-width: 100%;
       border-radius: 12px;
       cursor: crosshair;
       display: none;
     }
-    #renk-kutusu {
-      margin-top: 20px;
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      border: 4px solid white;
+
+    /* Seçilen renk göstergesi (en son tıklanan) */
+    #secilen-renk-alani {
       display: none;
+      align-items: center;
+      gap: 14px;
+      margin-top: 16px;
+      background: #16213e;
+      padding: 12px 20px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 400px;
     }
-    #hex-kod {
-      margin-top: 12px;
-      font-size: 1.8rem;
+    #anlik-renk-kutu {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 3px solid white;
+      flex-shrink: 0;
+    }
+    #anlik-hex {
+      font-size: 1.5rem;
       font-weight: bold;
       letter-spacing: 2px;
-      display: none;
     }
-    #kopyala-btn {
-      margin-top: 10px;
+    #anlik-kopyala {
+      margin-left: auto;
       background: transparent;
       border: 2px solid white;
       color: white;
-      padding: 8px 20px;
+      padding: 6px 14px;
       border-radius: 20px;
       cursor: pointer;
-      display: none;
+      font-size: 0.85rem;
     }
+
+    /* Renk listesi */
+    #renk-listesi-baslik {
+      display: none;
+      width: 100%;
+      max-width: 400px;
+      margin-top: 24px;
+      margin-bottom: 8px;
+      font-size: 1rem;
+      color: #aaa;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #temizle-btn {
+      background: transparent;
+      border: none;
+      color: #e94560;
+      cursor: pointer;
+      font-size: 0.85rem;
+      text-decoration: underline;
+    }
+    #renk-listesi {
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .renk-satir {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #16213e;
+      padding: 10px 16px;
+      border-radius: 10px;
+    }
+    .renk-satir .kare {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 2px solid rgba(255,255,255,0.2);
+      flex-shrink: 0;
+    }
+    .renk-satir .hex {
+      font-size: 1.1rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+    .renk-satir .sira {
+      font-size: 0.75rem;
+      color: #aaa;
+      margin-left: 4px;
+    }
+    .renk-satir .kopyala-mini {
+      margin-left: auto;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 4px 10px;
+      border-radius: 14px;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+
     #bilgi { margin-top: 15px; font-size: 0.85rem; color: #aaa; text-align: center; }
   </style>
 </head>
 <body>
   <h1>🎨 Renk Bulucu</h1>
-  <button id="kamera-btn">📷 Fotoğraf Çek / Seç</button>
-  <input type="file" id="dosya" accept="image/*" capture="environment" style="display:none"/>
+
+  <div class="buton-grup">
+    <button id="kamera-btn">📷 Kamerayla Çek</button>
+    <button class="ikincil" id="galeri-btn">🖼️ Galeriden Seç</button>
+  </div>
+
+  <!-- Kamera için capture="environment" -->
+  <input type="file" id="dosya-kamera" accept="image/*" capture="environment" style="display:none"/>
+  <!-- Galeri için capture yok -->
+  <input type="file" id="dosya-galeri" accept="image/*" style="display:none"/>
+
   <canvas id="canvas"></canvas>
-  <div id="renk-kutusu"></div>
-  <p id="hex-kod"></p>
-  <button id="kopyala-btn">📋 Kopyala</button>
-  <p id="bilgi">Fotoğraf çektikten sonra<br/>renk öğrenmek istediğin noktaya dokun</p>
+
+  <!-- En son seçilen renk -->
+  <div id="secilen-renk-alani">
+    <div id="anlik-renk-kutu"></div>
+    <span id="anlik-hex"></span>
+    <button id="anlik-kopyala">Kopyala</button>
+  </div>
+
+  <p id="bilgi">Fotoğraf seçtikten sonra renk almak istediğin noktaya dokun</p>
+
+  <!-- Biriken renk listesi -->
+  <div id="renk-listesi-baslik" style="display:none">
+    <span id="renk-sayisi">Seçilen renkler</span>
+    <button id="temizle-btn">🗑️ Listeyi temizle</button>
+  </div>
+  <div id="renk-listesi"></div>
 
   <script>
-    const btn = document.getElementById('kamera-btn');
-    const dosya = document.getElementById('dosya');
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    const renkKutusu = document.getElementById('renk-kutusu');
-    const hexKod = document.getElementById('hex-kod');
-    const kopyalaBtn = document.getElementById('kopyala-btn');
+    const secilenRenkAlani = document.getElementById('secilen-renk-alani');
+    const anlikRenkKutu = document.getElementById('anlik-renk-kutu');
+    const anlikHex = document.getElementById('anlik-hex');
+    const anlikKopyala = document.getElementById('anlik-kopyala');
+    const renkListesi = document.getElementById('renk-listesi');
+    const renkListesiBaslik = document.getElementById('renk-listesi-baslik');
+    const renkSayisi = document.getElementById('renk-sayisi');
+    const temizleBtn = document.getElementById('temizle-btn');
+    const bilgi = document.getElementById('bilgi');
 
-    btn.addEventListener('click', () => dosya.click());
+    let renkler = []; // biriken renkler
 
-    dosya.addEventListener('change', (e) => {
-      const file = e.target.files[0];
+    // Buton → input tetikleme
+    document.getElementById('kamera-btn').addEventListener('click', () =>
+      document.getElementById('dosya-kamera').click());
+    document.getElementById('galeri-btn').addEventListener('click', () =>
+      document.getElementById('dosya-galeri').click());
+
+    // Her iki input da aynı fonksiyonu kullanıyor
+    function gorselYukle(file) {
       if (!file) return;
       const reader = new FileReader();
       reader.onload = (ev) => {
@@ -93,16 +211,21 @@
           canvas.height = img.height;
           ctx.drawImage(img, 0, 0);
           canvas.style.display = 'block';
-          document.getElementById('bilgi').textContent = '👆 Renk almak istediğin noktaya dokun';
+          bilgi.textContent = '👆 Renk almak istediğin noktaya dokun';
         };
         img.src = ev.target.result;
       };
       reader.readAsDataURL(file);
-    });
+    }
 
+    document.getElementById('dosya-kamera').addEventListener('change', (e) =>
+      gorselYukle(e.target.files[0]));
+    document.getElementById('dosya-galeri').addEventListener('change', (e) =>
+      gorselYukle(e.target.files[0]));
+
+    // Canvas'a tıklama → renk al
     canvas.addEventListener('click', (e) => {
       const rect = canvas.getBoundingClientRect();
-      // Ekran boyutu ile canvas boyutu farkını hesapla
       const scaleX = canvas.width / rect.width;
       const scaleY = canvas.height / rect.height;
       const x = (e.clientX - rect.left) * scaleX;
@@ -113,20 +236,58 @@
         pixel[0].toString(16).padStart(2, '0') +
         pixel[1].toString(16).padStart(2, '0') +
         pixel[2].toString(16).padStart(2, '0');
+      const hexBuyuk = hex.toUpperCase();
 
-      renkKutusu.style.background = hex;
-      renkKutusu.style.display = 'block';
-      hexKod.textContent = hex.toUpperCase();
-      hexKod.style.display = 'block';
-      kopyalaBtn.style.display = 'inline-block';
+      // Anlık gösterge
+      anlikRenkKutu.style.background = hexBuyuk;
+      anlikHex.textContent = hexBuyuk;
+      secilenRenkAlani.style.display = 'flex';
+
+      // Listeye ekle
+      renkler.unshift(hexBuyuk); // en yeni üste
+      listeGuncelle();
     });
 
-    kopyalaBtn.addEventListener('click', () => {
-      navigator.clipboard.writeText(hexKod.textContent).then(() => {
-        kopyalaBtn.textContent = '✅ Kopyalandı!';
-        setTimeout(() => kopyalaBtn.textContent = '📋 Kopyala', 2000);
+    // Anlık kopyala
+    anlikKopyala.addEventListener('click', () => kopyala(anlikHex.textContent, anlikKopyala));
+
+    // Listeyi temizle
+    temizleBtn.addEventListener('click', () => {
+      renkler = [];
+      listeGuncelle();
+    });
+
+    function listeGuncelle() {
+      renkListesi.innerHTML = '';
+      if (renkler.length === 0) {
+        renkListesiBaslik.style.display = 'none';
+        return;
+      }
+      renkListesiBaslik.style.display = 'flex';
+      renkSayisi.textContent = `Seçilen renkler (${renkler.length})`;
+
+      renkler.forEach((hex, i) => {
+        const satir = document.createElement('div');
+        satir.className = 'renk-satir';
+        satir.innerHTML = `
+          <div class="kare" style="background:${hex}"></div>
+          <span class="hex">${hex}</span>
+          <span class="sira">#${i + 1}</span>
+          <button class="kopyala-mini">Kopyala</button>
+        `;
+        satir.querySelector('.kopyala-mini').addEventListener('click', (e) =>
+          kopyala(hex, e.target));
+        renkListesi.appendChild(satir);
       });
-    });
+    }
+
+    function kopyala(hex, buton) {
+      navigator.clipboard.writeText(hex).then(() => {
+        const onceki = buton.textContent;
+        buton.textContent = '✅ Kopyalandı';
+        setTimeout(() => buton.textContent = onceki, 2000);
+      });
+    }
   </script>
 </body>
 </html>
