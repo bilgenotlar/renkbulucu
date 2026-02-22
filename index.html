@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Renk Bulucu</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #1a1a2e;
+      color: white;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    h1 { margin-bottom: 20px; font-size: 1.5rem; }
+    #kamera-btn {
+      background: #e94560;
+      color: white;
+      border: none;
+      padding: 14px 30px;
+      border-radius: 30px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+    #canvas {
+      max-width: 100%;
+      border-radius: 12px;
+      cursor: crosshair;
+      display: none;
+    }
+    #renk-kutusu {
+      margin-top: 20px;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 4px solid white;
+      display: none;
+    }
+    #hex-kod {
+      margin-top: 12px;
+      font-size: 1.8rem;
+      font-weight: bold;
+      letter-spacing: 2px;
+      display: none;
+    }
+    #kopyala-btn {
+      margin-top: 10px;
+      background: transparent;
+      border: 2px solid white;
+      color: white;
+      padding: 8px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      display: none;
+    }
+    #bilgi { margin-top: 15px; font-size: 0.85rem; color: #aaa; text-align: center; }
+  </style>
+</head>
+<body>
+  <h1>🎨 Renk Bulucu</h1>
+  <button id="kamera-btn">📷 Fotoğraf Çek / Seç</button>
+  <input type="file" id="dosya" accept="image/*" capture="environment" style="display:none"/>
+  <canvas id="canvas"></canvas>
+  <div id="renk-kutusu"></div>
+  <p id="hex-kod"></p>
+  <button id="kopyala-btn">📋 Kopyala</button>
+  <p id="bilgi">Fotoğraf çektikten sonra<br/>renk öğrenmek istediğin noktaya dokun</p>
+
+  <script>
+    const btn = document.getElementById('kamera-btn');
+    const dosya = document.getElementById('dosya');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const renkKutusu = document.getElementById('renk-kutusu');
+    const hexKod = document.getElementById('hex-kod');
+    const kopyalaBtn = document.getElementById('kopyala-btn');
+
+    btn.addEventListener('click', () => dosya.click());
+
+    dosya.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+          canvas.style.display = 'block';
+          document.getElementById('bilgi').textContent = '👆 Renk almak istediğin noktaya dokun';
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      // Ekran boyutu ile canvas boyutu farkını hesapla
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
+
+      const pixel = ctx.getImageData(x, y, 1, 1).data;
+      const hex = '#' +
+        pixel[0].toString(16).padStart(2, '0') +
+        pixel[1].toString(16).padStart(2, '0') +
+        pixel[2].toString(16).padStart(2, '0');
+
+      renkKutusu.style.background = hex;
+      renkKutusu.style.display = 'block';
+      hexKod.textContent = hex.toUpperCase();
+      hexKod.style.display = 'block';
+      kopyalaBtn.style.display = 'inline-block';
+    });
+
+    kopyalaBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(hexKod.textContent).then(() => {
+        kopyalaBtn.textContent = '✅ Kopyalandı!';
+        setTimeout(() => kopyalaBtn.textContent = '📋 Kopyala', 2000);
+      });
+    });
+  </script>
+</body>
+</html>
